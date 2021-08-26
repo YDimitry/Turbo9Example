@@ -1,0 +1,9 @@
+hierarchical record Record1 inherited МашинаРеквизитов.Базовые.БазоваяКодИмя title "Пример записи";
+  field GroupPath : String(MaxIndexedStr);
+
+  field field1 : String;
+  field field2 : String;
+  field field3 : Logical;
+  field Description : String;
+
+end;

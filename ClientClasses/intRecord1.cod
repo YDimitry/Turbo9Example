@@ -1,0 +1,55 @@
+Class inherited МашинаРеквизитов.Базовые.интЗапись "";
+
+
+inclass public
+
+
+
+
+
+
+--------------------------
+    func СвязанныйКлассЗаписей :Class Record;
+        Result = Record1;
+    end;
+
+    func Create :intRecord1;
+        Result        = inherited Create;
+        Result.Record = Record1.Create;
+    end;
+
+    func ОткрытьПоЗаписи synonym OpenRecord( aRec :Record1 ) :intRecord1;
+        Result        = inherited Create;
+        Result.Record = aRec;
+    end;
+
+    -- функция возвращает бланк-редактор записи по умолчанию
+    func БланкРедакторПоУмолчанию :Class BlankForm;
+        Result = EditRecord11;
+    end;
+
+    -- 'функция возвращает картотеку записи по умолчанию'
+    func КартотекаПоУмолчанию :Class CardForm;
+        Result = CardRecord11;
+    end;
+
+InObject Public
+
+  ---------------------------------------------------------
+
+    var Record : Record1;
+
+    proc Инициализировать synonym Init;
+        Assert(Record.State = Kernel.Record.Created);
+--        if СИС2.ФункцииРТТИ.ВКлассеЕстьСвойство(Record.ClassType, 'ПростойНумератор') then
+--            Record.Код = ПростойНумератор.GetNewCode(Record.ClassType);
+--            Record.ПростойНумератор = int(Record.Код);
+--        end;
+
+    end;
+
+    proc ИнициализироватьПоУмолчанию synonym InitByDefault;
+        Init;
+    end;
+
+end

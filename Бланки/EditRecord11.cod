@@ -1,0 +1,46 @@
+Class  inherited СИС2.БазовыйБланкРедактор "Пример бланка редактора записи", editor Record1;
+
+InClass Public
+
+InObject Private
+
+   Интерфейс                   :intRecord1;
+
+--------------------------------------------------------------------------------
+--{ Обработчики событий бланка
+
+   proc шаблон_ПриСчитывании;
+        inherited шаблон_ПриСчитывании;
+        -- Вызывается при смене текущей записи в бланке-редакторе
+
+        Интерфейс = intRecord1.create;
+        Интерфейс.record = record;
+        if Record.State = Kernel.Record.Created then
+            Интерфейс.init;
+        end;
+  end;
+
+  func шаблон_ПриЗаписи :Logical;
+--        Record.ПростойНумератор = int(Record.Код);
+        Result = inherited шаблон_ПриЗаписи;
+        -- Вызывается при сохранении записи в бланке-редакторе
+        Result = True; -- Продолжить сохранение записи
+  end;
+
+
+  proc кнЗагрузитьПриНажатии(Sender :Button);
+     trace("Нажали кнопку загрузить");
+  end;
+
+  proc флЗамокПриИзменении(Sender :CheckBox);
+     if field3 = false then
+         trace("сняли Флаг");
+     else
+        trace("установили флаг");
+     end;
+      
+  end;
+
+--}
+
+end
