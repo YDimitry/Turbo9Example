@@ -11,5 +11,6 @@
     <Group Name="ClientClasses" Type="Classes" Disabled="False"/>
     <Group Name="Бланки" Type="Blanks" Disabled="False"/>
     <Group Name="Картотеки" Type="Cards" Disabled="False"/>
+    <Group Name="Attachment" Type="Other" Disabled="False"/>
   </Groups>
 </Project>

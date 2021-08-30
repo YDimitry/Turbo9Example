@@ -1,4 +1,6 @@
 Class  inherited СИС2.БазовыйБланкРедактор "Пример бланка редактора записи", editor Record1;
+import ExampleProject Classes Consts;
+import СИС2 Classes СтроковыеФункции, Исключения;
 
 InClass Public
 
@@ -28,8 +30,45 @@ InObject Private
   end;
 
 
-  proc кнЗагрузитьПриНажатии(Sender :Button);
-     trace("Нажали кнопку загрузить");
+  proc btnLoadXML_OnClick(Sender :Button);
+
+     var fName,ErrorMessage :String;
+     var I : Integer;
+     var xmlRootNode: XML.Node;
+     var xmlNode: XML.Node;
+
+
+     if ChooseFile(fName, "Выбор файла", "Данные в формате xml|*.xml") <> cmOk then
+        return;
+     end;
+
+     xmlRootNode = XML.Node.Create;
+     xmlRootNode.Load(fName);
+
+       for I = 1..xmlRootNode.GetChildCount do
+          xmlNode = xmlRootNode.GetChildNodes[I];
+          trace(Format("%s= %s",[xmlNode.GetName,xmlNode.GetText]));
+       end;
+  end;
+
+  proc btnLoadExcel_OnClick(Sender :Button);
+      var fName : String;
+      var ExcelApp: Excel.ExcelApp;
+      var I,J: Integer;
+
+      if ChooseFile(fName, "Выбор файла", "Данные в формате Excel|*.xls?") <> cmOk then
+         return;
+      end;
+
+      ExcelApp = Excel.ExcelApp.CreateEx(fName);
+
+      for I = 1..ExcelApp.GetRowsCount do
+        for J = 1..ExcelApp.GetColumnsCount do
+          trace(Format("%s= %s",[ExcelApp.GetHeaderValue(J),ExcelApp.GetCellValue(I,J)]));
+        end;
+      end;
+
+      ExcelApp.CloseApp;
   end;
 
   proc флЗамокПриИзменении(Sender :CheckBox);

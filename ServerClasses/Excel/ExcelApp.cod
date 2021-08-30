@@ -1,0 +1,94 @@
+class "Объект для работы с файлами MS Excel";
+-- https://docs.microsoft.com/ru-ru/office/vba/api/overview/excel/object-model
+
+import СИС2 classes Исключения;
+type TExcel = Excel.ExcelApp;
+
+inclass public
+
+func Create: TExcel;
+  Result = inherited Create;
+  Result.Init;
+end;
+
+func CreateEx(aFilePath:String):TExcel;
+  Result = Create;
+  Result.open(aFilePath);
+  Result.selectWorksheet;
+end;
+
+
+inobject private
+  var ExcelObj: AutoObject;
+  var Workbook: AutoObject;
+  var Worksheet: AutoObject;
+  var HeaderRows: Integer := 1;
+  var Inited: Logical;
+
+proc Init;
+  try
+    --ExcelObj = AutoObject.OpenOrCreate("Excel.Application",True);
+    ExcelObj = AutoObject.Create("Excel.Application");
+    Inited = True;
+  except
+    AbortMessage('Не найдено приложение Microsoft Excel.^MВозможно, у Вас на компьютере не установлен Microsoft Office.');
+  end;
+end;
+
+
+inobject public
+
+proc open(aFilePath:String);
+  if not Inited then
+    Init;
+  end;
+  workbook = ExcelObj.Workbooks.open(aFilePath);
+end;
+
+proc selectWorksheet(aSheet: Integer=1);
+  if workbook<>nil then
+     Worksheet = workbook.Worksheets[if(aSheet<1,1,aSheet)];
+     Worksheet.select;
+  end;
+end;
+
+func GetRowsCount: Integer;
+  Result = worksheet.usedRange.rows.Count - HeaderRows;
+end;
+
+func GetColumnsCount: Integer;
+  Result = worksheet.usedRange.columns.Count;
+end;
+
+func GetCellValue(aRow,aCol:Integer):Variant;
+  Result = worksheet.Cells[aRow+HeaderRows,aCol].Value;
+end;
+
+-- тестовая функция
+func GetHeaderValue(aCol:Integer):Variant;
+  Result = worksheet.Cells[1,aCol].Value;
+end;
+
+proc SetHeaderRows(aVal:Integer);
+  HeaderRows = aVal;
+end;
+
+proc ShowApp;
+   ExcelObj.Visible = true;
+end;
+
+proc Close;
+  Workbook.Close(0); -- не сохранять изменения
+  WorkBook = nil;
+end;
+
+proc CloseApp;
+  if Workbook<>nil then
+     Close;
+  end;
+  ExcelObj.Quit;
+  ExcelObj = nil;
+  Inited = False;
+end;
+
+end

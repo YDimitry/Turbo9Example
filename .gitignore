@@ -1,3 +1,4 @@
+syntax: glob
 *.~*
 *.#*
 *.7z
@@ -7,3 +8,7 @@
 *.orig
 *.bak
 *.rej
+*.*acc
+*.*hlp
+
+

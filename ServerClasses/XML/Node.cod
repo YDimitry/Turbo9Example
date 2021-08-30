@@ -1,0 +1,142 @@
+class "Узел xml документа";
+-- https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ms764730(v=vs.85)
+
+import ExampleProject classes Consts;
+import СИС2 Classes СтроковыеФункции;
+
+type XMLNode = XML.Node;
+
+inclass public
+
+ func Create: XMLNode;
+   Result = inherited Create;
+ end;
+
+ func CreateEx(aNode:AutoObject): XMLNode;
+   Result = Create;
+   Result.Node = aNode;
+ end;
+
+inobject private
+ var Node       : AutoObject;
+ var ParentNode : XMLNode;
+ var ChildNodes : XMLNode[];
+ var Attributes : XMLNode[];
+
+proc Init;
+
+
+end;
+
+inobject public
+
+proc Load(aFilePath:String);
+  var loadSuccess: Logical;
+  var ErrorMessage : String;
+  var XMLDocument : AutoObject;
+  XMLDocument = AutoObject.Create("MSXML2.DOMDocument");
+     loadSuccess = XMLDocument.load(aFilePath);
+
+     if not loadSuccess or XMLDocument.parseError.errorCode <>0 then
+        ErrorMessage = ErrorMessage+Format("Ошибка чтения XML-файла:^MКод=%d^MСтрока : %d^Mпозиция : %d^M%s",
+           [XMLDocument.parseError.errorCode,
+            XMLDocument.parseError.line,
+            XMLDocument.parseError.linepos,
+            XMLDocument.parseError.reason
+            ]);
+        SetError(1,ErrorMessage);
+     end;
+     Node = XMLDocument.documentElement;
+end;
+
+func GetParentNode: XMLNode;
+   if ParentNode<>nil then
+      return ParentNode;
+   end;
+   if Node.parentNode<>nil then
+      ParentNode = XMLNode.CreateEx(Node.parentNode);
+   end;
+   Result = ParentNode;
+end;
+
+func isRootNode:Logical;
+  Result = GetParentNode = nil;
+end;
+
+func GetChildNodes: XMLNode[];
+  var I: Integer;
+
+  if ChildNodes<>nil then
+     return ChildNodes;
+  end;
+  if HasChildren then
+     for  I = 0.. GetChildCount-1 do
+        InsertInArray(ChildNodes,LengthOfArray(ChildNodes)+1,XMLNode.CreateEx(Node.childNodes.item(I)));
+     end;
+     Result= ChildNodes;
+  end;
+end;
+
+
+func GetType: NodeType;
+  Result = Node.nodeType;
+end;
+func isDocument:Logical;
+   Result = Node.nodeType = NODE_DOCUMENT;
+end;
+-- Returns the qualified name for attribute,
+-- document type, element, entity, or notation nodes.
+-- Returns a fixed string for all other node types. Read-only.
+func GetName: String;
+  Result = Node.nodeName;
+end;
+
+--Contains the text associated with the node
+func GetValue:String;
+  Result = Node.nodeValue;
+end;
+
+-- текстовое содержимое узла
+func GetText:String;
+  Result = Node.text;
+end;
+
+func GetAttributes: XMLNode[];
+  var I : Integer;
+  if Attributes<>nil then
+     return Attributes;
+  end;
+  if HasAttributes then
+     for I = 0..GetAttributesCount-1 do
+        InsertInArray(Attributes, LengthOfArray(Attributes)+1,XMLNode.CreateEx(Node.attributes.item(I)));
+     end;
+     Result = Attributes;
+  end;
+end;
+
+func GetChildCount: Integer;
+   if ChildNodes<>nil then
+      return LengthOfArray(ChildNodes);
+   end;
+   Result = Node.childNodes.length;
+end;
+
+func GetAttributesCount:Integer;
+  if Attributes<>nil then
+     return lengthOfArray(Attributes);
+  end;
+  Result = Node.attributes.length;
+end;
+
+
+inobject private
+
+func HasAttributes:Logical;
+  Result = GetAttributesCount>0 ;
+end;
+
+func HasChildren:Logical;
+  Result = GetChildCount>0;
+end;
+
+end
