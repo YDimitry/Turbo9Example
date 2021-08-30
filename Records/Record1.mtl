@@ -5,5 +5,12 @@ hierarchical record Record1 inherited МашинаРеквизитов.Базовые.БазоваяКодИмя tit
   field field2 : String;
   field field3 : Logical;
   field Description : String;
+  struct sub_tbl array Integer title 'Подтаблица записи';
+     field Code : String;
+     field Name : String;
+     field Date : Date;
+     field Selected : Logical;
+     field Desctiption : String;
 
+  end;
 end;
