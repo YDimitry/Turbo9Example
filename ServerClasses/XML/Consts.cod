@@ -3,7 +3,8 @@ class "Константы";
 inclass public
 
 type NodeType = (
-         NODE_ELEMENT                = 1
+         NODE_NIL                    = 0
+        ,NODE_ELEMENT                = 1
         ,NODE_ATTRIBUTE              = 2
         ,NODE_TEXT                   = 3
         ,NODE_CDATA_SECTION          = 4

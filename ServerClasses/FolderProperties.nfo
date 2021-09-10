@@ -3,3 +3,10 @@
   <Property Name="Title" Value="Классы для сервера исполнения. Также грузятся клиентом."/>
   <Property Name="ProcSrv" Value="True"/>
 </Properties>
+<Items>
+  <Item Name="Excel"/>
+  <Item Name="XML"/>
+  <Item Name="Consts"/>
+  <Item Name="ICell"/>
+  <Item Name="Utils"/>
+</Items>

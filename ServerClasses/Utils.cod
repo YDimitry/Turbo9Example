@@ -1,0 +1,43 @@
+class "утилиты";
+
+inclass
+
+func Concat(aValues:Variant[];aDelimiter:String=" "):String;
+  var I : Integer;
+  Result = "";
+  if LengthOfArray(aValues)>0 then
+     for I = 1..LengthOfArray(aValues) do
+        Result =  if(Result<>"",Result+aDelimiter,Result) + str(aValues[I]);
+     end;
+  end;
+end;
+
+func ParseLogical(aValue:String):Logical;
+  Result = aValue<>nil and Lo(trim(aValue)) = 'true';
+end;
+
+func EndsWith(aText:String; aStr:String; aCaseSens: Logical = True):Logical;
+  var TextLen,StrLen: Integer;
+  var TextEnd : String;
+  StrLen = Length(aStr);
+  TextLen = Length(aText);
+
+  if aText=nil or aStr= nil or TextLen<StrLen then
+    return False;
+  end;
+
+  if aText = aStr then
+     return True;
+  end;
+  TextEnd = Substr(aText,TextLen-strLen+1,strLen);
+  if aCaseSens then
+     Result =  TextEnd = aStr;
+  else
+     Result = Lo(TextEnd) = Lo(aStr);
+  end;
+
+
+end;
+
+
+end

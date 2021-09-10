@@ -1,0 +1,17 @@
+class inherited ICell "ίχεικΰ Excel";
+type TExcelCell = Excel.Cell;
+
+inclass public
+
+  func CreateEx(aObject:AutoObject):TExcelCell;
+    Result = inherited CreateEx(aObject);
+    Result.AsString = if(not Result.isEmpty, Str(aObject.Value2),"");
+  end;
+
+inobject private
+
+func isEmpty:Logical;
+   return Cell = nil or Cell.Value = nil;
+end;
+
+end

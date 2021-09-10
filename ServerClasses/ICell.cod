@@ -1,0 +1,56 @@
+class "интерфейс ячейки";
+
+inclass
+
+  func CreateEx(aObject:AutoObject):ICell;
+    Result = inherited Create;
+    Result.Cell = aObject;
+  end;
+
+
+inobject private
+  var Cell: AutoObject;
+
+
+inobject public
+var AsString: String;
+
+
+func asNumeric:Numeric;
+  if not isEmpty then
+
+     try
+       Result = Num(asString);
+     finally
+       
+     end;
+  end;
+end;
+
+func asInt:Integer;
+  if not isEmpty then
+  -- TODO: проверка, что число соотвествует Integer
+     try
+        Result = Int(asString);
+     finally
+
+     end;
+  end;
+end;
+
+func asDate:Date;
+  if not isEmpty then
+  -- TODO: проверка, что число соотвествует Date,
+  --       если указан только год проверить год на валидность и преобразовать в дату
+     SetError(0,"Not Implemented");
+     Result = CreateDate(1,1,1970);
+  end;
+end;
+
+inobject private
+
+func isEmpty:Logical;
+   return AsString = nil;
+end;
+
+end

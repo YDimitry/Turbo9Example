@@ -1,0 +1,17 @@
+class inherited ICell"";
+
+inclass
+
+func CreateEx(aObject:AutoObject):XML.Cell;
+  Result = inherited CreateEx(aObject);
+  Result.AsString = if(not Result.isEmpty, Str(aObject.text),"");
+end;
+
+
+inobject private
+
+func isEmpty: Logical;
+  Result = Cell = nil or Cell.text = nil;
+end;
+
+end

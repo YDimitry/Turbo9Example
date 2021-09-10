@@ -1,12 +1,44 @@
 Class  inherited СИС2.БазовыйБланкРедактор "Пример бланка редактора записи", editor Record1;
-import ExampleProject Classes Consts;
+
 import СИС2 Classes СтроковыеФункции, Исключения;
 
 InClass Public
 
-InObject Private
+   -- столбцы подтаблицы
+   var OrdNr[]       : integer = $;
+   --var Ord2[]        : Integer = $;
 
+   var Inventory     : String[];
+   var Name          : String[];
+   var Character     : String[];
+   var IssueDate     : String[];
+   var Quantity      : String[];
+   var BookValue     : String[];
+   var OKOF          : String[];
+   var Group         : String[];
+   var LifeTime      : String[];
+   var AmortPerMonth : String[];
+   var ResValue      : String[];
+   var AmortAt       : String[];
+   var Contact       : String[];
+   var Reason        : String[];
+   var BalanceHolder : String[];
+
+
+InObject public
+   InventoryTable    :TemplateSection;
+   inventoryTableHeader :TemplateSection;
+   Frame8            :TemplateFrame;
+   Frame9            :TemplateFrame;
+   Frame13           :TemplateFrame;
+   Frame16           :TemplateFrame;
+   Frame19           :TemplateFrame;
+   TemplateCardfile1 : TemplateCardFile;
+
+InObject private
    Интерфейс                   :intRecord1;
+
+   var ValuesArray: ICell[2];
 
 --------------------------------------------------------------------------------
 --{ Обработчики событий бланка
@@ -20,6 +52,14 @@ InObject Private
         if Record.State = Kernel.Record.Created then
             Интерфейс.init;
         end;
+
+--      пример картотеки во врейме
+--        фрКартотека :TemplateFrame;
+--        картРеестрМИ = Данные.ДляРесурса.картРесурс.Create;
+--        LoadForm(фрКартотека, картРеестрМИ);
+--        W = Window;
+--        W.Caption = "Муниципальное имущество";
+
   end;
 
   func шаблон_ПриЗаписи :Logical;
@@ -29,47 +69,121 @@ InObject Private
         Result = True; -- Продолжить сохранение записи
   end;
 
+ --      пример картотеки во врейме при переключении
+  func ФреймГлавноеПриПереключении(Frame :TemplateFrame; SubFrame :TemplateFrame):Logical;
+    -- Если пользователь переключил закладку у фрейма.
+    -- Параметры:
+    --   Frame: родительский фрейм, в котором произошло переключение
+    --   SubFrame: фрейм, который будет активным
+    var locCard: CardRecord11;
 
-  proc btnLoadXML_OnClick(Sender :Button);
+    if (SubFrame = Frame8)  and (SubFrame.Frame[Frame9.ParentIndex].InplaceForm = nil) then
+       locCard = CardRecord11.Create;
+       locCard.CardFile.Filter = "";
+       LoadForm(Subframe.Frame[Frame9.ParentIndex],locCard);
 
-     var fName,ErrorMessage :String;
-     var I : Integer;
-     var xmlRootNode: XML.Node;
-     var xmlNode: XML.Node;
+    end;
 
 
-     if ChooseFile(fName, "Выбор файла", "Данные в формате xml|*.xml") <> cmOk then
+    if (SubFrame = Frame13) then
+      
+    end;
+
+
+    Result = True; -- Разрешаем переключение
+  end;
+
+  proc btnImportFromFile_OnClick(Sender :Button);
+     var fName :String;
+
+     if ChooseFile(fName, "Выбор файла", "Данные в формате xml|*.xml|Данные в формате Excel|*.xls?") <> cmOk then
         return;
      end;
 
-     xmlRootNode = XML.Node.Create;
-     xmlRootNode.Load(fName);
+     ImportResource.FromFile(ValuesArray, fName);
+     FillSubtable;
 
-       for I = 1..xmlRootNode.GetChildCount do
-          xmlNode = xmlRootNode.GetChildNodes[I];
-          trace(Format("%s= %s",[xmlNode.GetName,xmlNode.GetText]));
+  end;
+  -- добавление секции и стилей программно
+  proc btnInsertSec_OnClick(Sender :Button);
+    var Sec : TemplateSection;
+    var I,J:Integer;
+    Sec = Frame19.AddSection;
+    Sec.ColumnsCount = 5;
+    Sec.RowsCount = 2;
+
+    for I = 1..Sec.RowsCount do
+       for J = 1..Sec.ColumnsCount do
+         -- Sec.Cell[J,I].Bevel = Template.DefaultBevel ;
+         Sec.Cell[J,I].Border = [1,1,1,1];   -- 0 - нет рамки
+                                             -- 1 - тонкая рамка
+                                             -- 2 - толстая рамка
+         Sec.Cell[J,I].CellType = Template.FieldCell;
+         Sec.Cell[J,I].Style = Template.Style[2];    --"Поле ввода"
+
        end;
+    end;
+
+    --Frame19.
+
+
   end;
 
-  proc btnLoadExcel_OnClick(Sender :Button);
-      var fName : String;
-      var ExcelApp: Excel.ExcelApp;
-      var I,J: Integer;
-
-      if ChooseFile(fName, "Выбор файла", "Данные в формате Excel|*.xls?") <> cmOk then
-         return;
-      end;
-
-      ExcelApp = Excel.ExcelApp.CreateEx(fName);
-
-      for I = 1..ExcelApp.GetRowsCount do
-        for J = 1..ExcelApp.GetColumnsCount do
-          trace(Format("%s= %s",[ExcelApp.GetHeaderValue(J),ExcelApp.GetCellValue(I,J)]));
-        end;
-      end;
-
-      ExcelApp.CloseApp;
+  proc btnSaveData_OnClick(Sender :Button);
+      
   end;
+
+  --@doc заполнение массивов подтаблицы
+  proc FillSubtable;
+     var I, J: Integer;
+     var RowsCount: Integer;
+     RowsCount = LengthOfArray(ValuesArray);
+     for I = 1..RowsCount do
+
+        Inventory[I]     = ValuesArray[I,1].AsString;
+        Name[I]          = ValuesArray[I,2].AsString;
+        Character[I]     = ValuesArray[I,3].AsString;
+--          IssueDate[I]     = GetCellString(I,5);
+--          Quantity[I]      = GetCellString(I,6);
+--          BookValue[I]     = GetCellString(I,7);
+--          OKOF[I]          = GetCellString(I,8);
+--          Group[I]         = GetCellString(I,9);
+--          LifeTime[I]      = GetCellString(I,10);
+--          AmortPerMonth[I] = GetCellString(I,11);
+--          ResValue[I]      = GetCellString(I,12);
+--          AmortAt[I]       = GetCellString(I,13);
+--          Contact[I]       = GetCellString(I,14);
+--          Reason[I]        = GetCellString(I,15);
+--          BalanceHolder[I] = GetCellString(I,16);
+
+     end;
+     InventoryTable.Count = RowsCount;
+  end;
+
+
+
+  proc Button1OnClick(Sender :Button);
+     while TemplateCardfile1.columnscount > 0 do
+          TemplateCardfile1.deletecolumn(1);
+     end;
+     with TemplateCardfile1.AddColumn do
+         FieldName = 'Код';
+         Caption = 'Код';
+         Width = 100;
+     end;
+     with TemplateCardfile1.AddColumn do
+         FieldName = 'Имя';
+         Caption = 'Имя';
+         Width = 150;
+     end;
+     with TemplateCardfile1 do
+         CanCopy     = false;
+         CanDelete   = false;
+         CanInsert   = false;
+         Filter      = "";
+     end;
+  end;
+
 
   proc флЗамокПриИзменении(Sender :CheckBox);
      if field3 = false then
@@ -79,6 +193,54 @@ InObject Private
      end;
       
   end;
+
+  proc OpenFormBtnOnClick(Sender :Button);
+     trace("нажата кнопка");
+  end;
+
+
+  func FieldCodeOnInput(Cell :TemplateCell; Value :Variant) :Logical;
+    -- Введенное значение корректно. Присвоить его переменной поля
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Value: введенное в поле значение 
+    if Cell.Row>2 then
+      return False;
+    end;
+    Result = True; -- Продолжаем стандартную обработку
+  end;
+
+  func FieldOrdNrOnOutput(Cell :TemplateCell; Value :Variant;
+    Action :Template.OutputTypes; var Format :String) :Variant;
+    -- Обработка вывода значения поля в зависимости от типа события
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Value: значение в поле клетки
+    --   Action: тип вывода (Вывод,Вычисление,Копирование,Экспорт)
+    --   Format: строка-формат вывода значения
+     
+    --Result = Value; -- Что получили, то и выводим
+    Result = Cell.Row;
+  end;
+
+  func TestBtn_OnClick(Cell :TemplateCell; Action :Template.ClickTypes) :Logical;
+    --   Cell: клетка шаблона
+    --   Action: тип нажатия (SingleClick, DoubleClick, EnterPressed, ButtonPressed)
+    var stor: Storage;
+    var I: Integer;
+
+    stor = Storage.Create;
+    stor.val1 = "qwe";
+    stor.val2 = "asd";
+    stor.var3 = "rrr";
+    for I = 1..stor.Count do
+       trace(stor.ItemsByNumber[I]+" "+stor.IndexByNumber[I]);
+         --       ^значение                 ^название переменной
+    end;
+    trace(stor.var4);
+  end;
+
+
 
 --}
 

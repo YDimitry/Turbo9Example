@@ -60,13 +60,18 @@ func GetColumnsCount: Integer;
   Result = worksheet.usedRange.columns.Count;
 end;
 
-func GetCellValue(aRow,aCol:Integer):Variant;
-  Result = worksheet.Cells[aRow+HeaderRows,aCol].Value;
+func GetCell(aRow,aCol:Integer):ICell;
+  Result = Excel.Cell.CreateEx(worksheet.Cells[aRow+HeaderRows,aCol]);
 end;
 
+func GetCellString(aRow,aCol:Integer):String;
+  Result = GetCell(aRow,aCol).AsString;
+end;
+
+
 -- тестовая функция
-func GetHeaderValue(aCol:Integer):Variant;
-  Result = worksheet.Cells[1,aCol].Value;
+func GetHeaderValue(aCol:Integer):ICell;
+  Result = Excel.Cell.CreateEx(worksheet.Cells[1,aCol]);
 end;
 
 proc SetHeaderRows(aVal:Integer);

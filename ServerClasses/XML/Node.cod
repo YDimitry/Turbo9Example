@@ -1,7 +1,7 @@
 class "Узел xml документа";
 -- https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ms764730(v=vs.85)
 
-import ExampleProject classes Consts;
+import Classes XML.Consts;
 import СИС2 Classes СтроковыеФункции;
 
 type XMLNode = XML.Node;
@@ -13,15 +13,16 @@ inclass public
  end;
 
  func CreateEx(aNode:AutoObject): XMLNode;
-   Result = Create;
-   Result.Node = aNode;
+      Result = Create;
+      Result.XMLDOMElement = aNode;
  end;
 
 inobject private
- var Node       : AutoObject;
- var ParentNode : XMLNode;
- var ChildNodes : XMLNode[];
- var Attributes : XMLNode[];
+ --var XMLDOMDocument      : AutoObject;
+ var XMLDOMElement       : AutoObject;
+ var ParentNode          : XMLNode;
+ var ChildNodes          : XMLNode[];
+ var Attributes          : XMLNode[];
 
 proc Init;
 
@@ -33,101 +34,181 @@ inobject public
 proc Load(aFilePath:String);
   var loadSuccess: Logical;
   var ErrorMessage : String;
-  var XMLDocument : AutoObject;
-  XMLDocument = AutoObject.Create("MSXML2.DOMDocument");
-     loadSuccess = XMLDocument.load(aFilePath);
+  var I : Integer;
 
-     if not loadSuccess or XMLDocument.parseError.errorCode <>0 then
-        ErrorMessage = ErrorMessage+Format("Ошибка чтения XML-файла:^MКод=%d^MСтрока : %d^Mпозиция : %d^M%s",
-           [XMLDocument.parseError.errorCode,
-            XMLDocument.parseError.line,
-            XMLDocument.parseError.linepos,
-            XMLDocument.parseError.reason
+  XMLDOMElement = AutoObject.Create("MSXML2.DOMDocument");
+  loadSuccess = XMLDOMElement.load(aFilePath);
+
+  if not loadSuccess or XMLDOMElement.parseError.errorCode <>0 then
+     ErrorMessage = ErrorMessage+Format("Ошибка чтения XML-файла:^MКод=%d^MСтрока : %d^Mпозиция : %d^M%s",
+           [XMLDOMElement.parseError.errorCode,
+            XMLDOMElement.parseError.line,
+            XMLDOMElement.parseError.linepos,
+            XMLDOMElement.parseError.reason
             ]);
-        SetError(1,ErrorMessage);
-     end;
-     Node = XMLDocument.documentElement;
+     SetError(1,ErrorMessage);
+  end;
+  XMLDOMElement.setProperty("SelectionLanguage", "XPath");
+
 end;
 
 func GetParentNode: XMLNode;
    if ParentNode<>nil then
       return ParentNode;
    end;
-   if Node.parentNode<>nil then
-      ParentNode = XMLNode.CreateEx(Node.parentNode);
+   if XMLDOMElement<>nil and XMLDOMElement.parentNode<>nil then
+      ParentNode = XMLNode.CreateEx(XMLDOMElement.parentNode);
    end;
    Result = ParentNode;
 end;
 
+func getRootNode: XMLNode;
+  if isDocument then
+     Result = XMLNode.CreateEx(XMLDOMElement.documentElement);
+  end;
+end;
+
+proc SetNamespace(aValue:String);
+   SetProperty("SelectionNamespaces",aValue);
+end;
+
+proc SetProperty(aProperty:String; aValue:String);
+  if XMLDOMElement<>nil then
+     XMLDOMElement.setProperty(aProperty,aValue);
+  end;
+end;
+
+func GetProperty(aProperty:String):String;
+  if XMLDOMElement<>nil then
+     Result = XMLDOMElement.getProperty(aProperty);
+  end;
+end;
+
 func isRootNode:Logical;
-  Result = GetParentNode = nil;
+  Result = GetType = NODE_ELEMENT and GetParentNode.isDocument;
 end;
 
 func GetChildNodes: XMLNode[];
   var I: Integer;
-
-  if ChildNodes<>nil then
-     return ChildNodes;
-  end;
-  if HasChildren then
-     for  I = 0.. GetChildCount-1 do
-        InsertInArray(ChildNodes,LengthOfArray(ChildNodes)+1,XMLNode.CreateEx(Node.childNodes.item(I)));
+  if XMLDOMElement<>nil then
+     if ChildNodes<>nil then
+        return ChildNodes;
      end;
-     Result= ChildNodes;
+     if HasChildren then
+        for  I = 0.. GetChildCount-1 do
+           InsertInArray(ChildNodes,LengthOfArray(ChildNodes)+1,XMLNode.CreateEx(XMLDOMElement.childNodes.item(I)));
+        end;
+        Result= ChildNodes;
+     end;
   end;
 end;
 
+func GetNodesByTagName(aTagName:String): XMLNode[];
+  var IXMLDOMNodeList: AutoObject;
+  var I : Integer;
+  if XMLDOMElement<>nil then
+     IXMLDOMNodeList = XMLDOMElement.getElementsByTagName(aTagName);
+     if IXMLDOMNodeList<>nil and IXMLDOMNodeList.length>0 then
+       for I = 0..IXMLDOMNodeList.length-1 do
+          InsertInArray(Result, LengthOfArray(Result)+1, XMLNode.CreateEx(IXMLDOMNodeList.item(I)));
+       end;
+     end;
+  end;
+end;
+
+
+func GetCell :ICell;
+   Result = XML.Cell.CreateEx(XMLDOMElement);
+end;
+
+func GetCellString: String;
+   Result = GetCell.AsString;
+end;
 
 func GetType: NodeType;
-  Result = Node.nodeType;
+  if XMLDOMElement = nil then
+     return NODE_NIL;
+  end;
+  Result = XMLDOMElement.nodeType;
 end;
+
 func isDocument:Logical;
-   Result = Node.nodeType = NODE_DOCUMENT;
+   Result = XMLDOMElement<>nil and XMLDOMElement.nodeType = NODE_DOCUMENT;
 end;
 -- Returns the qualified name for attribute,
 -- document type, element, entity, or notation nodes.
 -- Returns a fixed string for all other node types. Read-only.
 func GetName: String;
-  Result = Node.nodeName;
+  if XMLDOMElement<>nil then
+     Result = XMLDOMElement.nodeName;
+  end;
 end;
 
 --Contains the text associated with the node
 func GetValue:String;
-  Result = Node.nodeValue;
+  if XMLDOMElement<>nil then
+     Result = XMLDOMElement.nodeValue;
+  end;
 end;
 
 -- текстовое содержимое узла
 func GetText:String;
-  Result = Node.text;
+  if XMLDOMElement<>nil then
+     Result = XMLDOMElement.text;
+  end;
 end;
 
 func GetAttributes: XMLNode[];
   var I : Integer;
-  if Attributes<>nil then
-     return Attributes;
-  end;
-  if HasAttributes then
-     for I = 0..GetAttributesCount-1 do
-        InsertInArray(Attributes, LengthOfArray(Attributes)+1,XMLNode.CreateEx(Node.attributes.item(I)));
+  if XMLDOMElement<>nil then
+     if Attributes<>nil then
+        return Attributes;
      end;
-     Result = Attributes;
+     if HasAttributes then
+        for I = 0..GetAttributesCount-1 do
+           InsertInArray(Attributes, LengthOfArray(Attributes)+1,XMLNode.CreateEx(XMLDOMElement.attributes.item(I)));
+        end;
+        Result = Attributes;
+     end;
   end;
+end;
+
+
+
+func GetNamespace:String[];
+  var I: Integer;
+  if isRootNode and HasAttributes then
+     GetAttributes;
+     for  I = 1.. LengthOfArray(Attributes) do
+        Attributes[I].isNamespaceAttribute;
+        InsertInArray(Result,LengthOfArray(Result)+1,Attributes[I].GetName+"='"+Attributes[I].GetValue+"'"); --
+     end;
+  end;
+
 end;
 
 func GetChildCount: Integer;
-   if ChildNodes<>nil then
-      return LengthOfArray(ChildNodes);
+   if XMLDOMElement<>nil then
+      if ChildNodes<>nil then
+         return LengthOfArray(ChildNodes);
+      end;
+      Result = XMLDOMElement.childNodes.length;
    end;
-   Result = Node.childNodes.length;
 end;
 
 func GetAttributesCount:Integer;
-  if Attributes<>nil then
-     return lengthOfArray(Attributes);
+  if XMLDOMElement<>nil then
+     if Attributes<>nil then
+        return lengthOfArray(Attributes);
+     end;
+     Result = XMLDOMElement.attributes.length;
   end;
-  Result = Node.attributes.length;
 end;
 
+--@doc возвращает объект XMLNode, если не найден возвращает пустой объект
+func GetNodeByName(aTagName:String):XMLNode;
+   Result = XMLNode.CreateEx(if(XMLDOMElement<>nil,XMLDOMElement.selectSingleNode(aTagName),nil));
+end;
 
 inobject private
 
@@ -138,5 +219,10 @@ end;
 func HasChildren:Logical;
   Result = GetChildCount>0;
 end;
+
+func isNamespaceAttribute:Logical;
+  Result = getType = NODE_ATTRIBUTE and СодержимоеСтрокОдинаково(Слева(GetName,5), "xmlns");
+end;
+
 
 end

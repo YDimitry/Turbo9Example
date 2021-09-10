@@ -1,0 +1,61 @@
+class "";
+
+inclass
+
+proc FromXML(var aData: ICell[2]; fName:String);
+
+   var I,J,K : Integer;
+   var xmlDoc, xmlRoot,xmlData, xmlRow: XML.Node;
+   var xmlRows:XML.Node[];
+   var TagNames : String[];
+
+   aData = nil;
+   xmlDoc = XML.Node.Create;
+   xmlDoc.Load(fName);
+   xmlRoot = xmlDoc.GetRootNode;
+   xmlDoc.SetNamespace(Utils.Concat(xmlRoot.GetNamespace));
+
+   xmlRows = xmlRoot.GetNodesByTagName("v8:CatalogObject.ОсновныеСредства");
+   TagNames = ["v8:Code","v8:Description","v8:НаименованиеПолное"];
+
+   K = 0; -- счетчик строк без помеченых как isFolder
+   for I = 1..LengthOfArray(xmlRows) do -- строки
+
+      if not utils.parseLogical(xmlRows[I].GetNodeByName("v8:IsFolder").GetText) then
+         K = K + 1;
+         for J = 1..LengthOfArray(TagNames) do  -- столбцы
+            xmlData = xmlRows[I].GetNodeByName(TagNames[J]); -- если такого тэга нет вернется пустой объект, но не nil
+            aData[K,J] = xmlData.GetCell;
+         end;
+      end;
+   end;
+end;
+
+proc FromExcel(var aData: ICell[2]; fName:String);
+  var ExcelApp: Excel.ExcelApp;
+  var I,J: Integer;
+
+  aData = nil;
+  with Excel.ExcelApp.CreateEx(fName) do
+     for I = 1..GetRowsCount do -- строки
+
+         for J = 1..3 do  -- столбцы
+            aData[I,J] = GetCell(I,J+1); -- первый столбец порядковый номер пропускается
+         end;
+
+     end;
+     CloseApp;
+  end;
+end;
+
+proc FromFile(var aData:ICell[2];fName:String);
+
+   if Utils.EndsWith(fName,"xls") or Utils.EndsWith(fName,"xlsx") then
+      FromExcel(aData,fName);
+   elsif Utils.EndsWith(fName,"xml") then
+      FromXML(aData,fName);
+   end;
+end;
+
+
+end
