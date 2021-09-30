@@ -5,13 +5,9 @@ inclass public
 
   func CreateEx(aObject:AutoObject):TExcelCell;
     Result = inherited CreateEx(aObject);
-    Result.AsString = if(not Result.isEmpty, Str(aObject.Value2),"");
+    Result.AsString = if(not (aObject = nil or aObject.Value2 = nil), Str(aObject.Value2),nil);
   end;
 
-inobject private
 
-func isEmpty:Logical;
-   return Cell = nil or Cell.Value = nil;
-end;
 
 end

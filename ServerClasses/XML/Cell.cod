@@ -4,12 +4,10 @@ inclass
 
 func CreateEx(aObject:AutoObject):XML.Cell;
   Result = inherited CreateEx(aObject);
-  Result.AsString = if(not Result.isEmpty, Str(aObject.text),"");
+  Result.AsString = if(not Result.isEmpty, Str(aObject.text),nil);
 end;
 
-
-inobject private
-
+inobject public
 func isEmpty: Logical;
   Result = Cell = nil or Cell.text = nil;
 end;

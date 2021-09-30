@@ -23,7 +23,8 @@ inobject private
  var ParentNode          : XMLNode;
  var ChildNodes          : XMLNode[];
  var Attributes          : XMLNode[];
-
+ var rowRoot             : Logical; -- узл строки
+ var nodePath            : String;
 proc Init;
 
 
@@ -31,13 +32,18 @@ end;
 
 inobject public
 
-proc Load(aFilePath:String);
+proc Load(aData:String;LoadAsFile:Logical);
   var loadSuccess: Logical;
   var ErrorMessage : String;
   var I : Integer;
 
   XMLDOMElement = AutoObject.Create("MSXML2.DOMDocument");
-  loadSuccess = XMLDOMElement.load(aFilePath);
+  if LoadAsFile then
+     loadSuccess = XMLDOMElement.load(aData);
+  else
+     loadSuccess = XMLDOMElement.loadXML(aData);
+  end;
+
 
   if not loadSuccess or XMLDOMElement.parseError.errorCode <>0 then
      ErrorMessage = ErrorMessage+Format("Ошибка чтения XML-файла:^MКод=%d^MСтрока : %d^Mпозиция : %d^M%s",
@@ -49,7 +55,6 @@ proc Load(aFilePath:String);
      SetError(1,ErrorMessage);
   end;
   XMLDOMElement.setProperty("SelectionLanguage", "XPath");
-
 end;
 
 func GetParentNode: XMLNode;
@@ -60,6 +65,10 @@ func GetParentNode: XMLNode;
       ParentNode = XMLNode.CreateEx(XMLDOMElement.parentNode);
    end;
    Result = ParentNode;
+end;
+
+proc SetParentNode(a:XMLNode);
+   ParentNode = a;
 end;
 
 func getRootNode: XMLNode;
@@ -88,15 +97,28 @@ func isRootNode:Logical;
   Result = GetType = NODE_ELEMENT and GetParentNode.isDocument;
 end;
 
+func isRow:Logical;
+  Result = rowRoot;
+end;
+
+proc SetIsRow;
+  rowRoot = True; -- узел является строкой
+end;
+
 func GetChildNodes: XMLNode[];
   var I: Integer;
+  var child: XMLNode;
   if XMLDOMElement<>nil then
      if ChildNodes<>nil then
         return ChildNodes;
      end;
-     if HasChildren then
-        for  I = 0.. GetChildCount-1 do
-           InsertInArray(ChildNodes,LengthOfArray(ChildNodes)+1,XMLNode.CreateEx(XMLDOMElement.childNodes.item(I)));
+     if XMLDOMElement.childNodes.Length>0 then
+        for  I = 0.. XMLDOMElement.childNodes.Length-1 do
+           if not XMLDOMElement.childNodes.item(I).nodeType in [NODE_TEXT, NODE_COMMENT] then
+              child = XMLNode.CreateEx(XMLDOMElement.childNodes.item(I));
+              child.SetParentNode(self);
+              InsertInArray(ChildNodes,LengthOfArray(ChildNodes)+1,child);
+           end;
         end;
         Result= ChildNodes;
      end;
@@ -144,6 +166,23 @@ func GetName: String;
   end;
 end;
 
+-- возвращает путь к узлу начиная от дочернего узла строки
+func GetPath:String;
+  if isRow or isRootNode then
+     return "";
+  end;
+  if nodePath<>nil then
+     return nodePath;
+  end;
+  if ParentNode.isRow then
+     nodePath = GetName;
+  else
+     nodePath = ParentNode.GetPath + "_" + GetName;
+  end;
+  return nodePath;
+end;
+
+
 --Contains the text associated with the node
 func GetValue:String;
   if XMLDOMElement<>nil then
@@ -189,10 +228,8 @@ end;
 
 func GetChildCount: Integer;
    if XMLDOMElement<>nil then
-      if ChildNodes<>nil then
-         return LengthOfArray(ChildNodes);
-      end;
-      Result = XMLDOMElement.childNodes.length;
+
+   return LengthOfArray(GetChildNodes);
    end;
 end;
 
@@ -210,19 +247,33 @@ func GetNodeByName(aTagName:String):XMLNode;
    Result = XMLNode.CreateEx(if(XMLDOMElement<>nil,XMLDOMElement.selectSingleNode(aTagName),nil));
 end;
 
+func HasChildren:Logical;
+  Result = GetChildCount>0;
+end;
+
 inobject private
 
 func HasAttributes:Logical;
   Result = GetAttributesCount>0 ;
 end;
 
-func HasChildren:Logical;
-  Result = GetChildCount>0;
-end;
-
 func isNamespaceAttribute:Logical;
   Result = getType = NODE_ATTRIBUTE and СодержимоеСтрокОдинаково(Слева(GetName,5), "xmlns");
 end;
 
+proc removeAllComments;
+   var IXMLDOMNodeList: AutoObject;
+   var I:Integer;
+   if XMLDOMElement<>nil then
+      IXMLDOMNodeList = XMLDOMElement.SelectNodes("//comment()");
+      if IXMLDOMNodeList.Length>0 then
+         for I = 0..IXMLDOMNodeList.Length do
+            IXMLDOMNodeList.item(I).parentNode.RemoveChild(IXMLDOMNodeList.item(I));
+
+         end;
+
+      end;
+   end;
+end;
 
 end

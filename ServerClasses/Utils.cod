@@ -1,4 +1,5 @@
 class "утилиты";
+import СИС2 Classes СтроковыеФункции;
 
 inclass
 
@@ -35,8 +36,73 @@ func EndsWith(aText:String; aStr:String; aCaseSens: Logical = True):Logical;
   else
      Result = Lo(TextEnd) = Lo(aStr);
   end;
+end;
 
+func BeginsWith(aText:String; aStr:String; aCaseSens:Logical = True):Logical;
+  var TextLen,StrLen: Integer;
+  var TextBegin : String;
+  StrLen = Length(aStr);
+  TextLen = Length(aText);
+  if aText=nil or aStr= nil or TextLen<StrLen then
+    return False;
+  end;
 
+  if aText = aStr then
+     return True;
+  end;
+  TextBegin = Substr(aText,1,strLen);
+  if aCaseSens then
+     Result =  TextBegin = aStr;
+  else
+     Result = Lo(TextBegin) = Lo(aStr);
+  end;
+
+end;
+
+-- парсинг первого целого в строке
+func ExtractNumberFromString(aStr:String):String;
+   var I:Integer;
+   var s:String;
+   if aStr<>nil then
+      for I = 1..Length(aStr) do
+         s = aStr[I];
+         if (s >= '0') and (s <= '9') then
+            Result = Result+s;
+         elsif Result<>nil then
+            break;
+         end;
+      end;
+   end;
+end;
+
+func isDate(aVal:String):Logical;
+   return ParseDate(aVal)<>nil;
+end;
+
+func ParseDate(aVal:String):Date;
+  var strDateParts : String[];
+  var intDateParts : Integer[];
+  var I : Integer;
+
+  SplitString(aVal,'.',strDateParts);
+  if LengthOfArray(strDateParts) <> 3 then
+     return;
+  end;
+  for  I = 1..3 do
+     if isNumber(strDateParts[I]) and (I>2 or Length(strDateParts[I])<3) and (I<3 or Length(strDateParts[I])=4) then
+        intDateParts[I] = int(strDateParts[I]);
+--        if I=1 and not (intDateParts[I]>0 and intDateParts[I]<32) then
+--           return;
+--        elsif I=2 and not (intDateParts[I]>0 and intDateParts[I]<13) then
+--           return;
+--        elsif I=3 and not (intDateParts[I]>1900 and intDateParts[I]<2100) then -- изменить на текущий год
+--           return;
+--        end;
+     else
+        return;
+     end;
+  end;
+  Result = CreateDate(intDateParts[1],intDateParts[2],intDateParts[3]);
 end;
 
 

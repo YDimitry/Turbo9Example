@@ -4,6 +4,9 @@
   <Usage>
     <Project Name="СИС2"/>
     <Project Name="МашинаРеквизитов"/>
+    <Project Name="Базовый"/>
+    <Project Name="ПТМК_Базовый"/>
+    <Project Name="Jet"/>
   </Usage>
   <Groups>
     <Group Name="Records" Type="Documents" Disabled="False"/>

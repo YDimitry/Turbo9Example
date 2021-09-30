@@ -100,8 +100,8 @@ InObject private
         return;
      end;
 
-     ImportResource.FromFile(ValuesArray, fName);
-     FillSubtable;
+--     ImportResource.FromFile(ValuesArray, fName);
+--     FillSubtable;
 
   end;
   -- добавление секции и стилей программно
@@ -226,22 +226,57 @@ InObject private
   func TestBtn_OnClick(Cell :TemplateCell; Action :Template.ClickTypes) :Logical;
     --   Cell: клетка шаблона
     --   Action: тип нажатия (SingleClick, DoubleClick, EnterPressed, ButtonPressed)
-    var stor: Storage;
+    var stor,stor2: Storage;
+
     var I: Integer;
+    var IndexName,prefix: String;
 
     stor = Storage.Create;
-    stor.val1 = "qwe";
-    stor.val2 = "asd";
-    stor.var3 = "rrr";
-    for I = 1..stor.Count do
-       trace(stor.ItemsByNumber[I]+" "+stor.IndexByNumber[I]);
+    stor.some_prefix_val1 = "qwe";
+    stor.some_prefix_val2 = "asd";
+    stor.some_prefix2_var3 = "rrr";
+    stor.some_prefix_var3 = "ruuu";
+    stor.some_prefix_var4 = "raaa";
+    --for I = 1..stor.Count do
+    --   trace(stor.ItemsByNumber[I]+" "+stor.IndexByNumber[I]);
          --       ^значение                 ^название переменной
-    end;
-    trace(stor.var4);
+    --end;
+--    prefix = "some_prefix";
+--    for I = 1..stor.count do
+--      IndexName = stor.IndexByNumber[I];
+--      if Utils.BeginsWith(IndexName,prefix+"_") then
+--         trace(CutIndexPrefix(IndexName,prefix));
+--      end;
+--
+--
+--    end;
+
+     stor2 = ExtractData("some_prefix",stor);
+     for I = 1..stor2.count do
+
+        trace(stor2.IndexByNumber[I]+" "+stor2.ItemsByNumber[I]);
+       
+     end;
+
+
+    --trace(stor.var4);
   end;
 
+func ExtractData(aPrefix:String;aData:Storage):Storage;
+  var I:Integer;
+  var IndexName: String;
+  Result = Storage.Create;
+  for I = 1..aData.count do
+     IndexName = aData.IndexByNumber[I];
+     if Utils.BeginsWith(IndexName,aPrefix+"_") then
+        Result.SetField(CutIndexPrefix(IndexName,aPrefix),aData.GetField(IndexName));
+     end;
+  end;
+end;
 
-
+func CutIndexPrefix(aIndex,aPrefix:String):String;
+  Result = substr(aIndex,Length(aPrefix)+2,Length(aIndex)-Length(aPrefix)+1);
+end;
 --}
 
 end

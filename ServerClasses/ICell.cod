@@ -1,5 +1,5 @@
 class "интерфейс ячейки";
-
+import СИС2 classes СтроковыеФункции;
 inclass
 
   func CreateEx(aObject:AutoObject):ICell;
@@ -13,41 +13,41 @@ inobject private
 
 
 inobject public
-var AsString: String;
-
+  var AsString: String;
+  var parseError:Logical;
 
 func asNumeric:Numeric;
   if not isEmpty then
-
-     try
-       Result = Num(asString);
-     finally
-       
+     if not isNumber(AsString)  then
+        parseError = True;
+        SetError(0,"Неправильный формат числа");
      end;
+
+     Result = Num(asString);
+
   end;
 end;
 
 func asInt:Integer;
   if not isEmpty then
-  -- TODO: проверка, что число соотвествует Integer
-     try
-        Result = Int(asString);
-     finally
-
+     if not isNumber(AsString)  then
+        parseError = True;
+        SetError(0,"Неправильный формат числа");
      end;
+      Result = Int(asString);
   end;
 end;
 
 func asDate:Date;
   if not isEmpty then
-  -- TODO: проверка, что число соотвествует Date,
-  --       если указан только год проверить год на валидность и преобразовать в дату
-     SetError(0,"Not Implemented");
-     Result = CreateDate(1,1,1970);
+
+     if not Utils.isDate(AsString) then
+        parseError = True;
+        SetError(0,"Неправильный формат даты");
+     end;
+     Result = Utils.ParseDate(AsString);
   end;
 end;
-
-inobject private
 
 func isEmpty:Logical;
    return AsString = nil;

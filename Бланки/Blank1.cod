@@ -1,4 +1,6 @@
 Class inherited СИС2.БазовыйБланк "Таблица без записи" ;
+import Jet Classes Functions.Array, Functions.String;
+import Classes Base64;
 
 InClass Public
 
@@ -10,10 +12,16 @@ InObject Public
 InObject Private
    var TableData: TemplateSection;
    var Ord: Integer[] = $;
+   var Код: String;
+   var имя: String;
    var data1: String[];
    var data2: String[];
    var data3: String[];
    var data4: String[];
+
+   var strField : String;
+   secTestField : TemplateSection;
+   testData     : TemplateCell = secTestField.CellByField["strField"];
 
 --------------------------------------------------------------------------------
 -- Приватные методы бланка
@@ -36,6 +44,72 @@ InObject Private
 
   proc Button1OnClick(Sender :Button);
      trace(data1);
+  end;
+
+  func btnTest_OnClick(Cell :TemplateCell; Action :Template.ClickTypes) :Logical;
+     var I : Integer;
+    var binObj : BinaryObject;
+--    binObj = BinaryObject.Create;
+--    binObj.LoadFromFile("c:\Turbo9\Projects\ExampleProject\Attachment\testFile.bin");
+--    trace(Base64_encode(binObj));
+      binObj = Base64_decode(testData.Value);
+      trace(binObj.GetString(TextFile.UTF8));
+
+
+--    with iterator.new(1,binObj.Size) do
+--       while __next do
+--          trace(binObj.Bytes[__index]);
+--       end;
+--    end;
+
+--    I = 1;
+--    trace( 1*2);
+
+    Result = True; -- Разрешаем стандартную обработку
+  end;
+
+  proc Array_functions_try;
+        var arr: Variant[];
+
+     with iterator.new(1,10) do
+        while __next do
+           array_append(arr,random(10));
+        end;
+     end;
+
+     trace(arr);
+
+     with array_map(arr) do
+        while __next do
+           __apply(__item);
+        end;
+        __assign(arr);
+
+     end;
+
+     trace(arr);
+
+     with array_filter(arr) do
+        while __next do
+           __apply( mod(__item,2)=0 );
+        end;
+        __assign(arr);
+     end;
+
+     trace(arr);
+
+     with array_each(arr) do
+        while __next do
+           trace(str_format("{}: {}",[__index,__item]));
+        end;
+     end;
+
+     with array_reduce(arr,0) do
+        while __next do
+           __apply( __result + __item );
+        end;
+        trace(str_format("array_reduce: {}",__result));
+     end;
   end;
 
 --}

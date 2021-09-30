@@ -1,7 +1,9 @@
 class "Объект для работы с файлами MS Excel";
 -- https://docs.microsoft.com/ru-ru/office/vba/api/overview/excel/object-model
 
-import СИС2 classes Исключения;
+import СИС2 classes Исключения, СтроковыеФункции, Файл;
+
+
 type TExcel = Excel.ExcelApp;
 
 inclass public
@@ -22,13 +24,17 @@ inobject private
   var ExcelObj: AutoObject;
   var Workbook: AutoObject;
   var Worksheet: AutoObject;
-  var HeaderRows: Integer := 1;
+  var HeaderRows: Integer;
   var Inited: Logical;
+  var ColumnNames : String[];
+  var tmpFileName: String;
 
 proc Init;
   try
     --ExcelObj = AutoObject.OpenOrCreate("Excel.Application",True);
     ExcelObj = AutoObject.Create("Excel.Application");
+    --ExcelObj = AutoObject.CreateRemote("Excel.Application","localhost");
+    --ExcelObj = AutoObject.CreateRemote("Excel.Application","192.168.1.8");
     Inited = True;
   except
     AbortMessage('Не найдено приложение Microsoft Excel.^MВозможно, у Вас на компьютере не установлен Microsoft Office.');
@@ -38,12 +44,49 @@ end;
 
 inobject public
 
+
 proc open(aFilePath:String);
   if not Inited then
     Init;
   end;
-  workbook = ExcelObj.Workbooks.open(aFilePath);
+  try
+--     workbook = ExcelObj.Workbooks.add;
+--     workbook = ExcelObj.Workbooks.open(aFilePath,,0);
+     workbook = ExcelObj.Application.Workbooks.open(aFilePath);
+  except
+     SetError(0,ErrorText+ " qwerty: не открыть файл "+aFilePath+" файл существует: "+str(ExistFile(aFilePath)));
+  end;
 end;
+
+proc ShowApp;
+   ExcelObj.Visible = True;
+end;
+
+proc NewWorkbook;
+    workbook = ExcelObj.Workbooks.add;
+end;
+
+proc saveAs(fName:String);
+   try
+   workbook.saveAs(fName);
+   except
+      SetError(0,Format("qwerty: файл %s не удалось сохранить",[fName]));
+   end;
+end;
+--
+--proc openBin(aContent:String;aExtension:String);
+--   var BinObj: BinaryObject;
+--
+--   tmpFileName = ПутьКВременномуКаталогу + ПолучитьУникальноеИмяФайла+"."+aExtension;
+--   BinObj = BinaryObject.Create;
+--
+--   -- Получить сам файл
+--   BinObj = BinaryObject.Create;
+--   BinObj.AsString = aContent;
+--   BinObj.SaveToFile(tmpFileName);
+--   trace("Saved to "+tmpFileName);
+--end;
+
 
 proc selectWorksheet(aSheet: Integer=1);
   if workbook<>nil then
@@ -53,7 +96,7 @@ proc selectWorksheet(aSheet: Integer=1);
 end;
 
 func GetRowsCount: Integer;
-  Result = worksheet.usedRange.rows.Count - HeaderRows;
+  Result = worksheet.usedRange.rows.Count - GetHeaderRowsCount;
 end;
 
 func GetColumnsCount: Integer;
@@ -61,39 +104,88 @@ func GetColumnsCount: Integer;
 end;
 
 func GetCell(aRow,aCol:Integer):ICell;
-  Result = Excel.Cell.CreateEx(worksheet.Cells[aRow+HeaderRows,aCol]);
+  Result = Excel.Cell.CreateEx(worksheet.Cells[aRow+GetHeaderRowsCount,aCol]);
 end;
 
 func GetCellString(aRow,aCol:Integer):String;
   Result = GetCell(aRow,aCol).AsString;
 end;
 
+func GetColumnName(aCol:Integer):String;
+  var colName : String;
+  var locCell : AutoObject;
+  var ma : AutoObject;
+  var I : Integer;
+  var CellValue : String;
+
+  if ColumnNames[aCol]<>nil then
+     return ColumnNames[aCol];
+  end;
+
+  for I = 1..GetHeaderRowsCount do -- цикл по строкам заголовка
+     CellValue = worksheet.Cells[I,aCol].MergeArea.Cells[1,1].value2;
+     if I>1 then
+        if CellValue <> worksheet.Cells[I-1,aCol].MergeArea.Cells[1,1].value2 then
+           colName = colName +"_" + ЗаменитьСимволыВСтроке(trim(CellValue)," ","");
+        end;
+     else
+        colName  = ЗаменитьСимволыВСтроке(trim(CellValue)," ","");
+     end;
+
+  end;
+  ColumnNames[aCol] = colName;
+  Result = colName;
+end;
+
+
+func GetHeaderRowsCount:Integer;
+  -- объединенный диапазон строк первой ячейки - заголовок
+  if HeaderRows>0 then
+     return HeaderRows;
+  end;
+  HeaderRows = worksheet.Cells[1,1].MergeArea.Rows.Count;
+  Result = HeaderRows;
+end;
 
 -- тестовая функция
 func GetHeaderValue(aCol:Integer):ICell;
   Result = Excel.Cell.CreateEx(worksheet.Cells[1,aCol]);
 end;
 
-proc SetHeaderRows(aVal:Integer);
-  HeaderRows = aVal;
-end;
-
-proc ShowApp;
-   ExcelObj.Visible = true;
-end;
 
 proc Close;
-  Workbook.Close(0); -- не сохранять изменения
-  WorkBook = nil;
+  if Workbook<>nil then
+     try
+        try
+           Workbook.Close(0); -- не сохранять изменения
+        except
+           -- значит открыто приложение Excel
+        end;
+     finally
+        WorkBook = nil;
+     end;
+  end;
 end;
 
 proc CloseApp;
-  if Workbook<>nil then
+
      Close;
+
+  if ExcelObj<>nil then
+     ExcelObj.Quit;
   end;
-  ExcelObj.Quit;
   ExcelObj = nil;
   Inited = False;
 end;
 
+--proc DeleteTmpFile;
+--   if tmpFileName<>nil and ExistFile(tmpFileName) then
+--      try
+--         RemoveFile(tmpFileName);
+--      except
+--      -- файл заблокирован
+--      end;
+--      tmpFileName = nil;
+--   end;
+--end;
 end

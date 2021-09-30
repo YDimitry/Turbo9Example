@@ -1,0 +1,172 @@
+class "Base64 Library";  -- из ComData/Service/Base64
+
+inclass public
+
+ func Base64_encode(blob :BinaryObject): String;
+    Result = intEncodeBase64(blob);
+ end;
+
+ func Base64_decode(aString : String) : BinaryObject;
+    Result = intDecodeBase64(aString);
+ end;
+
+inclass private
+
+ func intEncodeBase64(blob :BinaryObject): String;
+    var len, i, j, n, k: Integer;
+    var i1, i2, i3, i4: Integer;
+    var bin: BinaryObject;
+    var s: String;
+
+    bin = BinaryObject.Create;
+    len = blob.Size;
+    n = div(len, 3);
+
+    for i = 0..n - 1 do
+       j = i * 3 + 1;
+       i1 = 1 + shrFast(blob.Bytes[j], 2); -- 6 левых бит первого байта
+       i2 = 1 + shlFast(blob.Bytes[j] and 3, 4) + shrFast( blob.bytes[j+1], 4); -- 2 правых бита первого байта и 4 левых бита второго байта
+       i3 = 1 + shlFast( blob.bytes[j+1] and 15, 2) + shrFast( blob.Bytes[j+2], 6); -- 4 правых бита второго байта и 2 левых бита третьего байта
+       i4 = 1 + (blob.Bytes[j+2] and 63); -- 6 правых бит третьего байта
+       k = bin.size;
+       bin.size = bin.size + 4;
+       bin.Bytes[k+1] = Base64ArrOrd[i1];
+       bin.Bytes[k+2] = Base64ArrOrd[i2];
+       bin.Bytes[k+3] = Base64ArrOrd[i3];
+       bin.Bytes[k+4] = Base64ArrOrd[i4];
+    end;
+
+    if mod(len, 3) > 0 then
+       s = TripletShortbin(blob, 3*n + 1);
+       k = bin.size;
+       bin.size = bin.size + 4;
+       bin.Bytes[k+1] = ord(s[1]);
+       bin.Bytes[k+2] = ord(s[2]);
+       bin.Bytes[k+3] = ord(s[3]);
+       bin.Bytes[k+4] = ord(s[4]);
+    end;
+
+    Result = bin.AsString;
+ end;
+
+ func intDecodeBase64(aString : String) : BinaryObject;
+    var c1, c2, c3, c4, x1, x2, x3, len, i, j, n, aCount: Integer;
+
+    Result = BinaryObject.Create;
+
+    len = Length(aString);
+    n = div(len, 4) - 1;
+
+    for i = 0..n do
+       j = i * 4 + 1;
+       c1 = getSymbol(aString[j]);
+       c2 = getSymbol(aString[j+1]);
+       x1 = shlfast(c1, 2) + shrFast(c2, 4);
+       if i < n:
+          c3 = getSymbol(aString[j+2]);
+          c4 = getSymbol(aString[j+3]);
+          x2 = shlfast((c2 and 15), 4) + shrfast(c3, 2);
+          x3 = shlfast(c3 and 3, 6) + c4;
+       else
+          if aString[j+2] = '=':
+             c3 = 0;
+             x2 = -1;
+             x3 = -1;
+          else
+             c3 = getSymbol(aString[j+2]);
+          end;
+          if aString[j+3] = '=':
+             c4 = 0;
+             x3 = -1;
+          else
+             c4 = getSymbol(aString[j+3]);
+          end;
+          if x2 <> -1 then
+             x2 = shlfast((c2 and 15), 4) + shrfast(c3, 2);
+          end;
+          if x3 <> -1 then
+             x3 = shlfast(c3 and 3, 6) + c4;
+          end;
+       end;
+
+       aCount = aCount + 1;
+       Result.Size = aCount;
+       Result.Bytes[aCount] = x1;
+
+       if (i < n) or ((i = n) and (x2 <> -1)):
+          aCount = aCount + 1;
+          Result.Size = aCount;
+          Result.Bytes[aCount] = x2;
+       end;
+
+       if (i < n) or ((i = n) and (x3 <> -1)):
+          aCount = aCount + 1;
+          Result.Size = aCount;
+          Result.Bytes[aCount] = x3;
+       end;
+    end;
+ end;
+
+  PowerOfTwo :Integer[] = [ 2, 4, 8, 16, 32, 64, 128, 256
+  , 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536
+  , 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216
+  , 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824 --, 2147483648, 4294967296
+  ];
+
+  Base64Arr :String[] := ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'
+  ,'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'
+  ,'0','1','2','3','4','5','6','7','8','9','+','/'];
+
+  Base64ArrOrd :Integer[] := [65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
+  97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122,
+  48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 43, 47];
+
+  func getSymbol(s: String): Integer;
+    var ords: Integer;
+
+    ords = ord(s);
+    if ords >= 65 and ords <= 90:
+       Result = ords - 65;
+    elsif ords >= 97 and ords <= 122:
+       Result = ords - 71;
+    elsif ords >= 48 and ords <= 57:
+       Result = ords + 4;
+    elsif ords = 43:
+       Result = 62;
+    elsif ords = 47:
+       Result = 63;
+    end;
+  end;
+
+  -- Вспомогательная функция для кодирования последних байт. Выполняется единоразово
+  func TripletShortbin(blob: BinaryObject; n: integer): String;
+    var i1, i2, i3, ch1, ch2: Integer;
+
+    ch1 = blob.bytes[n];
+    i1 = 1 + shrFast(ch1, 2); -- 6 лев
+    i2 = 1 + shlFast(ch1 and 3, 4);
+    if blob.Size = n+1:
+       ch2 = blob.bytes[n + 1];
+       i2 = i2 + shrFast(ch2, 4); -- 2 правых бита первого байта и 4 левых бита второго байта
+       i3 = 1 + shlFast(ch2 and 15, 2); -- 4 правых бита второго байта и 2 левых бита третьего байта
+       Result = Base64Arr[i1] + Base64Arr[i2] + Base64Arr[i3] + '=';
+    else
+       Result = Base64Arr[i1] + Base64Arr[i2] + '==';
+    end;
+  end;
+
+  func shlFast(x, shift :Integer) :Integer;
+    Result = x * PowerOfTwo[shift];
+  end;
+
+  func shrFast(x, shift :Integer) :Integer;
+    Result = div(x, PowerOfTwo[shift]);
+  end;
+
+end
+
+
+
+
+
+
