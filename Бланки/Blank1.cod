@@ -10,18 +10,28 @@ InObject Public
 -- Публичные методы бланка
 
 InObject Private
-   var TableData: TemplateSection;
-   var Ord: Integer[] = $;
+   TableData: TemplateSection;
+   var Ord1: Integer[] = $;
+   var Ord2: Integer[] = $;
    var Код: String;
    var имя: String;
    var data1: String[];
    var data2: String[];
    var data3: String[];
    var data4: String[];
-
+   var поляДляВыбора : String[];
+   var testField : String;
+   var testField2 : String[];
+   var testField3 : String;
    var strField : String;
+
    secTestField : TemplateSection;
    testData     : TemplateCell = secTestField.CellByField["strField"];
+   testData2    : TemplateCell = secTestField.CellByField["testField"];
+
+   tableInputField : TemplateCell = TableData.CellByField["Data1"];
+   var abc : Logical;
+   var calcField :String;
 
 --------------------------------------------------------------------------------
 -- Приватные методы бланка
@@ -34,12 +44,16 @@ InObject Private
   proc шаблон_ПриОткрытии(Create :Logical);
     var I: Integer;
     inherited шаблон_ПриОткрытии(Create);
-    ФреймГлавное.ShowTabs = True;
-    for I = 1..10 do
-       data1[I] = str(I+I);
-    end;
+--    ФреймГлавное.ShowTabs = True;
+--    for I = 1..10 do
+--       data1[I] = str(I+I);
+--    end;
+--
+--    TableData.Count = 0;
+--    tableInputField.FieldType=Template.EnumField;
+    поляДляВыбора = ["qwert","asdfg","qwerty"];
+    calcField = "qwert";
 
-    TableData.Count = I-1;
   end;
 
   proc Button1OnClick(Sender :Button);
@@ -112,5 +126,404 @@ InObject Private
      end;
   end;
 
+  func FieldData1OnLookup(Cell :TemplateCell; Value :Variant; var NewValue :Variant) :Logical;
+    -- Обработка события нажатия у клетки кнопки обзора
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Value: старое значение в поле. Его тип зависит от типа поля.
+    --   NewValue: новое значение в поле. Его тип зависит от типа поля.
+    var локОтвет : integer;
+    локОтвет = Alternate('выбор поля', поляДляВыбора);
+    if локОтвет<>0 then
+       NewValue = поляДляВыбора[локОтвет];
+       Template.EndEdit(True);
+    else
+       Template.EndEdit(False);
+    end;
+
+    Result = False; -- Продолжаем стандартную обработку
+  end;
+
+  func Field_OnLookup(Cell :TemplateCell; Value :Variant; var NewValue :Variant)
+    :Logical;
+    -- Обработка события нажатия у клетки кнопки обзора
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Value: старое значение в поле. Его тип зависит от типа поля.
+    --   NewValue: новое значение в поле. Его тип зависит от типа поля.
+    var локОтвет : integer;
+    локОтвет = Alternate('выбор поля', поляДляВыбора);
+    if локОтвет<>0 then
+       NewValue = поляДляВыбора[локОтвет];
+       Template.EndEdit(True);
+    else
+       Template.EndEdit(False);
+    end;
+
+    Result = False; -- Продолжаем стандартную обработку
+  end;
+
+  func Field2_OnLookup(Cell :TemplateCell; Value :Variant; var NewValue :Variant)
+    :Logical;
+    -- Обработка события нажатия у клетки кнопки обзора
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Value: старое значение в поле. Его тип зависит от типа поля.
+    --   NewValue: новое значение в поле. Его тип зависит от типа поля.
+    var локОтвет : integer;
+    локОтвет = Alternate('выбор поля', поляДляВыбора);
+    if локОтвет<>0 then
+       NewValue = поляДляВыбора[локОтвет];
+       Template.EndEdit(True);
+    else
+       Template.EndEdit(False);
+    end;
+
+    Result = False; -- Продолжаем стандартную обработку
+  end;
+
+  func FieldOnClick(Cell :TemplateCell; Action :Template.ClickTypes) :Logical;
+    -- Обработка события нажатия в зависимости от типа
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Action: тип нажатия (SingleClick, DoubleClick, EnterPressed, ButtonPressed)
+
+    trace(Cell.Text);
+
+    Result = True; -- Разрешаем стандартную обработку
+  end;
+
+  func FieldabcOnClick(Cell :TemplateCell; Action :Template.ClickTypes) :Logical;
+    -- Обработка события нажатия в зависимости от типа
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Action: тип нажатия (SingleClick, DoubleClick, EnterPressed, ButtonPressed)
+    cell.Value = True;
+    Result = True; -- Разрешаем стандартную обработку
+  end;
+
+  func Cell_OnClick(Cell :TemplateCell; Action :Template.ClickTypes) :Logical;
+    -- Обработка события нажатия в зависимости от типа
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Action: тип нажатия (SingleClick, DoubleClick, EnterPressed, ButtonPressed)
+    trace("нажата ссылка");
+    Result = True; -- Разрешаем стандартную обработку
+  end;
+
+  func TestField3_OnClick(Cell :TemplateCell; Action :Template.ClickTypes) :Logical;
+    -- Обработка события нажатия в зависимости от типа
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Action: тип нажатия (SingleClick, DoubleClick, EnterPressed, ButtonPressed)
+    var testStr : String;
+
+    testStr = Cell.owner.Cell[Cell.Column-1,Cell.Row].Value;
+
+
+    with iterator.new(1,Length(testStr)) do
+       while __next do
+          trace (str(Kernel.System.Ord(testStr[__index])));
+         
+       end;
+    end;
+
+
+    Result = True; -- Разрешаем стандартную обработку
+  end;
+
+  func abc_OnClick(Cell :TemplateCell; Action :Template.ClickTypes) :Logical;
+    -- Обработка события нажатия в зависимости от типа
+    -- Параметры:
+    --   Cell: клетка шаблона
+    --   Action: тип нажатия (SingleClick, DoubleClick, EnterPressed, ButtonPressed)
+    abc = True;
+    Result = True; -- Разрешаем стандартную обработку
+  end;
+
+--  func calcField(Cell :TemplateCell; value :variant):String;
+--    trace("calc");
+--    Result = "abcd";
+--  end;
+
 --}
+
+--{  добавление таблиц программно
+--  proc AddTable;
+--     var varIndex, ColIndex:Integer;
+--     var TableRow : iterator;
+--     var tmpData : Данные.Ресурс[];
+--
+--
+--     if TableHeader=nil then
+--        TableHeader = ФреймГлавное.AddSection;
+--     end;
+--
+--     if TableData<>nil  then
+--        ФреймГлавное.DeleteSection(TableData.ParentIndex);
+--     end;
+--     TableData = ФреймГлавное.AddSection;
+--       -- заголовок таблицы
+--     with TableHeader do
+--        ColumnsCount = array_length(col_names)+1; -- 1 столбец порядковый номер
+--        RowsCount = 2;
+--     end;
+--
+--     -- тело таблицы
+--     --TableData.Name = "TableDataName";
+--     with TableData do
+--        ColumnsCount = TableHeader.ColumnsCount;
+--        --EnableRepeat = True;
+--     end;
+--
+--
+--     with array_each(TablePositions) do
+--        while __next do
+--           TableHeader.LinkCells(__item,1,2,1);
+--           with TableHeader.Cell[__item,1] do
+--             contents = TableNames[__index];
+--             Style = Template.Style[4]; -- "Заголовок таблицы"
+--             Border = [1,1,1,1];
+--           end;
+--        end;
+--     end;
+----     with iterator.new(1,2) do
+----        while __next do
+----
+----
+----        end;
+----     end;
+--
+--     --TableHeader.Cell[RightTablePos,1].LinkedWidth = 2;
+--
+--     with array_each(col_names) do
+--        while __next do
+--
+--           with TableHeader.Cell[__index,2] do -- свйства ячеек
+--              if __item<>nil and not str_starts_with(field_names[__index],"btn_")then --nil заголовки и кнопки не должны форматироваться
+--                 --CellType = Template.StaticCell;
+--                 Style = Template.Style[4]; -- "Заголовок таблицы"
+--                 -- если в массиве названий столбцов нет данных, название берется из массива названий переменных
+--                 Contents = __item;
+--                 Border = [1,1,1,1];
+--                 if __index = 1 then
+--                    TableHeader.Column[__index].width = 10; -- ширина столбца номер по порядку
+--                 end;
+--              elsif field_names[__index]=nil then -- промежуток
+--                 TableHeader.Column[__index].width = 5;
+--              end;
+--              TableData.Column[__index].width = TableHeader.Column[__index].width;
+--           end;
+--        end;
+--     end;
+--
+--     TableRow = iterator.new(1,max([array_length(LeftTable),array_length(RightTable)]));
+--     TableData.RowsCount=TableRow.__to;
+--
+--     while TableRow.__next do
+--
+--
+--        with array_each(field_names) do
+--           while __next do
+--
+--
+--              -- стиль ячейки тела таблицы
+--              with TableData.Cell[__index,TableRow.__index] do
+--                 if __index=1 then
+--                    -- номер по порядку
+--                    Contents =  TableRow.__index;
+--                    Border = [1,1,1,1];
+--                 else
+--                    if __item<>nil then
+--                       if __index < BtnPos then
+--                          -- данные ресурса
+--                          if __index < RightTablePos then
+--                             -- левая половина
+--                             if LeftTable[TableRow.__index]<>nil then
+--                                if __item = "Имя" then
+--                                   StaticStyle = Template.StaticHyperlink;
+--                                   Font.Color = clBlue;
+--                                   OnClick = "OpenBlank_OnClick";
+--                                   Caption = str(LeftTable[TableRow.__index]);
+--                                   Hint = str(LeftTable[TableRow.__index]);
+--                                end;
+--                                Contents = LeftTable[TableRow.__index].GetField(__item);
+--                             end;
+--                          else
+--                             -- правая половина
+--                             -- колонка выбор какие принять
+--                             if __item = "checkBox" then
+--                                --Style = Template.Style[2];  -- "Поле ввода"
+--                                CellType = Template.FieldCell;
+--                                CellFormat = Template.LogicalFormat;
+--                                Contents = "checkBox"; -- ссылка на переменную
+--                                OnClick = "CheckBox_OnClick";
+--                             else
+--
+--                                if RightTable[TableRow.__index] <>nil then
+--                                   if __item = "Имя" then
+--                                      StaticStyle = Template.StaticHyperlink;
+--                                      Font.Color = clBlue;
+--                                      OnClick = "OpenBlank_OnClick";
+--                                      Caption = str(RightTable[TableRow.__index]);
+--                                      Hint = str(RightTable[TableRow.__index]);
+--                                   end;
+--                                   Contents = RightTable[TableRow.__index].GetField(__item);
+--                                end;
+--                             end;
+--                          end;
+--                          Border = [1,1,1,1];
+--                       else
+--                          -- кнопки
+--                          StaticStyle = Template.StaticButton;
+--                          Contents = col_names[__index];
+--                          OnClick = __item+"_OnClick";
+--                          Enabled = not (__item = "btn_compare" and (LeftTable[TableRow.__index]=nil or RightTable[TableRow.__index]=nil));
+--                       end;
+--                    end;
+--                 end;
+--              end;
+--
+--           end; -- while field_names
+--        end;  -- with
+--
+--     end; -- while row
+--
+--
+--     --TableData.Count = max([array_length(LeftTable),array_length(RightTable)]);
+--  end;
+
+--  proc AddTableWithRepeatSection;
+--     --var varIndex, ColIndex:Integer;
+--     var tmpData : Данные.Ресурс[];
+--     var rowsCount : Integer;
+--
+--     rowsCount = max([array_length(LeftTable),array_length(RightTable)]);
+--
+--     if TableHeader=nil then
+--        TableHeader = ФреймГлавное.AddSection;
+--     end;
+--
+--     if TableData<>nil  then
+--        ФреймГлавное.DeleteSection(TableData.ParentIndex);
+--     end;
+--     TableData = ФреймГлавное.AddSection;
+--       -- заголовок таблицы
+--     with TableHeader do
+--        ColumnsCount = array_length(col_names); -- 1 столбец порядковый номер
+--        RowsCount = 2;
+--     end;
+--
+--     -- тело таблицы
+--     TableData.Name = "TableDataName";
+--     with TableData do
+--        ColumnsCount = TableHeader.ColumnsCount;
+--        EnableRepeat = True;
+--     end;
+--
+--     -- заголовок таблицы объединенные ячейки
+--     with array_each(TablePositions) do
+--        while __next do
+--           TableHeader.LinkCells(__item,1,2,1);
+--           with TableHeader.Cell[__item,1] do
+--             contents = TableNames[__index];
+--             Style = Template.Style[4]; -- "Заголовок таблицы"
+--             Border = [1,1,1,1];
+--           end;
+--        end;
+--     end;
+--
+--     -- подзаголовки таблицы
+--     with array_each(col_names) do
+--        while __next do
+--
+--           with TableHeader.Cell[__index,2] do -- свйства ячеек
+--              if __item<>nil and not str_starts_with(field_names[__index],"btn_")then --nil заголовки и кнопки не должны форматироваться
+--                 --CellType = Template.StaticCell;
+--                 Style = Template.Style[4]; -- "Заголовок таблицы"
+--                 -- если в массиве названий столбцов нет данных, название берется из массива названий переменных
+--                 Contents = __item;
+--                 Border = [1,1,1,1];
+--                 if __index = 1 then
+--                    TableHeader.Column[__index].width = 10; -- ширина столбца номер по порядку
+--                 end;
+--              elsif field_names[__index]=nil then -- промежуток
+--                 TableHeader.Column[__index].width = 5;
+--              end;
+--              TableData.Column[__index].width = TableHeader.Column[__index].width;
+--           end;
+--        end;
+--     end;
+--
+--     with array_each(field_names) do
+--        while __next do
+--
+--           -- стиль ячейки тела таблицы
+--           with TableData.Cell[__index,1] do
+--              if __index=1 then
+--                 -- номер по порядку
+--                 CellType = Template.FieldCell;
+--                 Contents =  "Col_OrdNr";
+--                 Border = [1,1,1,1];
+--              elsif __item<>nil then
+--                 if __index < BtnPos then
+--                    -- данные ресурса
+--                    CellType = Template.FieldCell;
+--                    if __index < RightTablePos then
+--                       -- левая половина
+--                       Contents = "LeftTable."+__item;
+--                       OnClick = "OpenBlankReference_OnClick";
+----                       if LeftTable[TableRow.__index]<>nil then
+----                          if __item = "Имя" then
+----                             StaticStyle = Template.StaticHyperlink;
+----                             Font.Color = clBlue;
+----                             OnClick = "OpenBlank_OnClick";
+----                             Caption = str(LeftTable[TableRow.__index]);
+----                             Hint = str(LeftTable[TableRow.__index]);
+----                          end;
+----                          Contents = LeftTable[TableRow.__index].GetField(__item);
+----                       end;
+--                    else
+--                       -- правая половина
+--                       -- колонка выбор какие принять
+--                       if __item = "checkBox" then
+--                          --Style = Template.Style[2];  -- "Поле ввода"
+--                          CellFormat = Template.LogicalFormat;
+--                          Contents = "checkBox"; -- ссылка на переменную
+--                          --OnClick = "CheckBox_OnClick";
+--                       else
+--                          Contents = "RightTable."+__item;
+--                          StaticStyle = Template.StaticHyperlink;
+--                          OnClick = "OpenBlankReference_OnClick";
+----                          if RightTable[TableRow.__index] <>nil then
+----                             if __item = "Имя" then
+----                                StaticStyle = Template.StaticHyperlink;
+----                                Font.Color = clBlue;
+----                                OnClick = "OpenBlank_OnClick";
+----                                Caption = str(RightTable[TableRow.__index]);
+----                                Hint = str(RightTable[TableRow.__index]);
+----                             end;
+----                             Contents = RightTable[TableRow.__index].GetField(__item);
+----                          end;
+--                       end;
+--                    end;
+--                    Border = [1,1,1,1];
+--                 else
+--                    -- кнопки
+--                    StaticStyle = Template.StaticButton;
+--                    Contents = col_names[__index];
+--                    OnClick = __item+"_OnClick";
+--                    --Enabled = not (__item = "btn_compare" and (LeftTable[TableRow.__index]=nil or RightTable[TableRow.__index]=nil));
+--                 end;
+--
+--              end;
+--           end;
+--
+--        end; -- while field_names
+--     end;  -- with
+--     TableData.Count = rowsCount;
+--  end;
+--}
+
+
 End
